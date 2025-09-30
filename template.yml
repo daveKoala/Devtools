@@ -15,3 +15,24 @@ services:
       - docker compose up -d
     depends:
       - core-api
+
+  address-service:
+    clone: "git clone git@bitbucket.org:deliveryappuk/address-service.git"
+    postCloneCmds:
+      - docker compose up -d
+    depends:
+      - core-api
+
+  ro-service:
+    clone: "git clone git@bitbucket.org:deliveryappuk/ro-service.git"
+    postCloneCmds:
+      - docker compose up -d
+    depends:
+      - core-api
+
+  driver-location-service:
+    clone: "git clone git@bitbucket.org:deliveryappuk/driver-location-service.git"
+    postCloneCmds:
+      - docker compose up -d
+    depends:
+      - core-api

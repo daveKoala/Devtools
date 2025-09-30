@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"context"
 	"errors"
 	"fmt"
@@ -8,6 +9,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"sort"
+	"strconv"
 	"strings"
 
 	"gopkg.in/yaml.v3"
@@ -47,14 +49,65 @@ func (s *ReposTask) Run(ctx context.Context) error {
 		return err
 	}
 
-	for _, name := range order {
-		svc := template.Services[name]
-		if err := cloneService(ctx, targetDir, name, svc.Clone); err != nil {
-			return err
+	scanner := bufio.NewScanner(os.Stdin)
+
+	for {
+		fmt.Println("\n=== Clone Repos ===")
+		fmt.Println("1. Clone all services")
+
+		for i, name := range order {
+			svc := template.Services[name]
+			deps := formatDependencies(svc.Depends)
+			fmt.Printf("%d. %s (depends: %s)\n", i+2, name, deps)
+		}
+
+		backOption := len(order) + 2
+		exitOption := len(order) + 3
+
+		fmt.Printf("%d. Back to main menu\n", backOption)
+		fmt.Printf("%d. Exit\n", exitOption)
+		fmt.Print("\nSelect option: ")
+
+		if !scanner.Scan() {
+			if err := scanner.Err(); err != nil {
+				return fmt.Errorf("failed to read input: %w", err)
+			}
+			return errors.New("input stream closed")
+		}
+
+		choiceText := strings.TrimSpace(scanner.Text())
+		choice, err := strconv.Atoi(choiceText)
+		if err != nil {
+			fmt.Println("Please enter a valid number.")
+			continue
+		}
+
+		switch {
+		case choice == 1:
+			if err := cloneServices(ctx, targetDir, template, order); err != nil {
+				return err
+			}
+		case choice >= 2 && choice < backOption:
+			idx := choice - 2
+			name := order[idx]
+			cloneList, err := template.cloneListFor(name)
+			if err != nil {
+				return err
+			}
+
+			fmt.Printf("\nCloning sequence: %s\n", strings.Join(cloneList, ", "))
+			if err := cloneServices(ctx, targetDir, template, cloneList); err != nil {
+				return err
+			}
+		case choice == backOption:
+			return nil
+		case choice == exitOption:
+			fmt.Println("Goodbye!")
+			os.Exit(0)
+		default:
+			fmt.Println("Invalid option. Please try again.")
 		}
 	}
-
-	return nil
 }
 
 func (s *ReposTask) templatePath() string {
@@ -150,6 +203,81 @@ func (t *repoTemplate) cloneOrder() ([]string, error) {
 	}
 
 	return order, nil
+}
+
+func (t *repoTemplate) cloneListFor(name string) ([]string, error) {
+	if _, ok := t.Services[name]; !ok {
+		return nil, fmt.Errorf("service %q not defined", name)
+	}
+
+	required := make(map[string]struct{})
+
+	var mark func(string) error
+	mark = func(svcName string) error {
+		svc, ok := t.Services[svcName]
+		if !ok {
+			return fmt.Errorf("service %q not defined", svcName)
+		}
+		for _, dep := range svc.Depends {
+			dep = strings.TrimSpace(dep)
+			if dep == "" {
+				continue
+			}
+			if _, seen := required[dep]; seen {
+				continue
+			}
+			required[dep] = struct{}{}
+			if err := mark(dep); err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+
+	if err := mark(name); err != nil {
+		return nil, err
+	}
+
+	required[name] = struct{}{}
+
+	order, err := t.cloneOrder()
+	if err != nil {
+		return nil, err
+	}
+
+	sequence := make([]string, 0, len(required))
+	for _, svcName := range order {
+		if _, ok := required[svcName]; ok {
+			sequence = append(sequence, svcName)
+		}
+	}
+
+	return sequence, nil
+}
+
+func cloneServices(ctx context.Context, targetDir string, template *repoTemplate, names []string) error {
+	for _, name := range names {
+		svc := template.Services[name]
+		if err := cloneService(ctx, targetDir, name, svc.Clone); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func formatDependencies(deps []string) string {
+	cleaned := make([]string, 0, len(deps))
+	for _, dep := range deps {
+		dep = strings.TrimSpace(dep)
+		if dep == "" {
+			continue
+		}
+		cleaned = append(cleaned, dep)
+	}
+	if len(cleaned) == 0 {
+		return "none"
+	}
+	return strings.Join(cleaned, ", ")
 }
 
 func cloneService(ctx context.Context, targetDir, serviceName, cloneCmd string) error {
