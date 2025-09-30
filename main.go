@@ -32,6 +32,7 @@ func main() {
 	registry.Register(&BuildTask{})
 	registry.Register(&TestTask{})
 	registry.Register(&DependancyCheckTask{})
+	registry.Register(&ReposTask{})
 
 	// Create and display menu
 	menu := NewMenu(registry)

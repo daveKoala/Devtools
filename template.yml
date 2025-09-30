@@ -1,6 +1,6 @@
 services:
   core-api:
-    clone: ""
+    clone: git clone git@bitbucket.org:deliveryappuk/core-api.git
     postCloneCmds:
       - docker compose up -d
       - exec open bash
@@ -9,8 +9,8 @@ services:
       - php artisan db:seed
     depends:
 
-  address-service:
-    clone: ""
+  dvla-service:
+    clone: "git clone git@bitbucket.org:deliveryappuk/dvla-bot.git"
     postCloneCmds:
       - docker compose up -d
     depends:
