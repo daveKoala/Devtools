@@ -1,0 +1,17 @@
+services:
+  core-api:
+    clone: ""
+    postCloneCmds:
+      - docker compose up -d
+      - exec open bash
+      - composer install
+      - php artisan migrate
+      - php artisan db:seed
+    depends:
+
+  address-service:
+    clone: ""
+    postCloneCmds:
+      - docker compose up -d
+    depends:
+      - core-api
