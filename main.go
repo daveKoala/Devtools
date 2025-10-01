@@ -28,11 +28,10 @@ func main() {
 
 	// Register example tasks
 	registry.Register(&HelloWorldTask{})
-	registry.Register(&SystemInfoTask{})
-	registry.Register(&BuildTask{})
-	registry.Register(&TestTask{})
 	registry.Register(&DependancyCheckTask{})
 	registry.Register(&ReposTask{})
+	registry.Register(&SSHKeyTask{})
+	registry.Register(&SystemInfoTask{})
 
 	// Create and display menu
 	menu := NewMenu(registry)

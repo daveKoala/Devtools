@@ -61,6 +61,7 @@ func (s *ReposTask) Run(ctx context.Context) error {
 		backOption := len(order) + 2
 		exitOption := len(order) + 3
 
+		fmt.Printf("\n")
 		fmt.Printf("%d. Back to main menu\n", backOption)
 		fmt.Printf("%d. Exit\n", exitOption)
 		fmt.Print("\nSelect option: ")
