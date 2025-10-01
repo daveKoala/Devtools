@@ -142,5 +142,3 @@ When the service is cloned, the commands execute inside the repo directory with 
 If a `healthCheck` block is provided, the tool runs the command using `bash -lc` after post-clone commands succeed. It retries up to `retries` times (default 5) with the specified `interval` (default 5s) and honours an optional per-attempt `timeout`. Environment defaults apply during the health check as well.
 
 Need a copy you can tweak? Run the “Export Template” task and it will write the embedded YAML (with current defaults) to `exported_template.yml`. From there you can adjust paths or environments locally without changing the baked-in defaults.
-
-Let me know what you think
