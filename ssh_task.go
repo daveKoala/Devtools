@@ -35,7 +35,7 @@ func (t *SSHKeyTask) Run(ctx context.Context) error {
 
 	if len(matches) == 0 {
 		fmt.Printf("No SSH public keys found in %s\n", searchDir)
-		fmt.Println("Generate one with: ssh-keygen -t ed25519 -C \"you@example.com\"")
+		fmt.Println("Generate one with: ssh-keygen -C <bitbucket-acme-corp> -t ed25519 -C \"you@example.com\"")
 		return nil
 	}
 
