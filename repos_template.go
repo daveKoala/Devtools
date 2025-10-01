@@ -24,6 +24,7 @@ type repoService struct {
 	Clone         string   `yaml:"clone"`
 	PostCloneCmds []string `yaml:"postCloneCmds"`
 	Depends       []string `yaml:"depends"`
+	Environment   map[string]string `yaml:"environment"`
 }
 
 // loadRepoTemplate fetches and parses template.yml, optionally falling back to the embedded copy.

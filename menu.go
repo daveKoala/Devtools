@@ -29,7 +29,7 @@ func NewMenu(registry *TaskRegistry) *Menu {
 func (m *Menu) Display(ctx context.Context) error {
 	for {
 		clearTerminal()
-		fmt.Println("\n=== DevTools Menu ===")
+		fmt.Printf("\n=== DevTools (version %s) ===\n", displayVersion())
 		tasks := m.registry.GetTasks()
 
 		if len(tasks) == 0 {

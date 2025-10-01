@@ -1,38 +1,27 @@
 services:
   core-api:
     clone: git clone git@bitbucket.org:deliveryappuk/core-api.git
+    environment:
+      APP_ENV: local
+      API_PORT: "8080"
+      DB_HOST: 127.0.0.1
+      DB_DATABASE: core_api
+      DB_USERNAME: core
+      DB_PASSWORD: secret
     postCloneCmds:
+      - cp -n .env.example .env
       - docker compose up -d
-      - exec open bash
-      - composer install
-      - php artisan migrate
-      - php artisan db:seed
+      - docker compose exec app php artisan migrate
+      - docker compose exec app php artisan db:seed
     depends:
 
   dvla-service:
     clone: "git clone git@bitbucket.org:deliveryappuk/dvla-bot.git"
+    environment:
+      APP_ENV: local
+      API_PORT: "8090"
     postCloneCmds:
-      - docker compose up -d
-    depends:
-      - core-api
-
-  address-service:
-    clone: "git clone git@bitbucket.org:deliveryappuk/address-service.git"
-    postCloneCmds:
-      - docker compose up -d
-    depends:
-      - core-api
-
-  ro-service:
-    clone: "git clone git@bitbucket.org:deliveryappuk/ro-service.git"
-    postCloneCmds:
-      - docker compose up -d
-    depends:
-      - core-api
-
-  driver-location-service:
-    clone: "git clone git@bitbucket.org:deliveryappuk/driver-location-service.git"
-    postCloneCmds:
+      - cp -n .env.example .env
       - docker compose up -d
     depends:
       - core-api
