@@ -1,0 +1,72 @@
+name: CI
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+    tags:
+      - 'v*'
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Verify formatting
+        run: |
+          fmt_output=$(gofmt -l .)
+          if [ -n "$fmt_output" ]; then
+            echo "The following files need gofmt:" >&2
+            echo "$fmt_output" >&2
+            exit 1
+          fi
+
+      - name: Run tests
+        run: go test ./...
+
+      - name: Build (current platform)
+        env:
+          CGO_ENABLED: 0
+        run: go build ./...
+
+  release-artifacts:
+    needs: build-test
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Build macOS packages
+        env:
+          CGO_ENABLED: 0
+        run: make package-macos
+
+      - name: Build Linux AMD64 package
+        env:
+          CGO_ENABLED: 0
+        run: make package TARGET_OS=linux TARGET_ARCH=amd64
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: devtools-${{ github.ref_name }}
+          path: |
+            bin/devtools-darwin-arm64.zip
+            bin/devtools-darwin-amd64.zip
+            bin/devtools-linux-amd64.zip

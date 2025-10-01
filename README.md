@@ -87,6 +87,25 @@ make package VERSION=v1.2.0 COMMIT=abc123 BUILD_DATE=2024-10-01T12:00:00Z
 
 Each package contains a single `devtools` binary; unzip it and run `./devtools` on the target machine. macOS users may need to allow the binary under *System Settings → Privacy & Security* on first launch.
 
+## Continuous Integration
+
+GitHub Actions (`.github/workflows/ci.yml`) runs automatically on pull requests and pushes to `main`. The workflow:
+
+- Checks formatting (`gofmt -l`)
+- Runs `go test ./...` and `go build`
+- When a tag matching `v*` is pushed, builds macOS (arm64 & amd64) and Linux AMD64 packages via the Makefile and uploads them as build artifacts
+
+To cut a release:
+
+```bash
+git checkout main
+git pull
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+The CI job will attach the packaged zips to the workflow artifacts for that tag; you can publish them as a GitHub Release if desired.
+
 ## Template Overview
 
 `template.yml` drives the repository cloning task. Each service entry supports:
