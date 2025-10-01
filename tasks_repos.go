@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"context"
+	_ "embed"
 	"errors"
 	"fmt"
 	"os"
@@ -20,6 +21,9 @@ const (
 	defaultRepoDir      = "dev-app"
 )
 
+//go:embed template.yml
+var embeddedTemplate []byte
+
 type ReposTask struct {
 	TemplatePath string
 	TargetDir    string
@@ -34,7 +38,8 @@ func (s *ReposTask) Description() string {
 }
 
 func (s *ReposTask) Run(ctx context.Context) error {
-	template, err := loadRepoTemplate(s.templatePath())
+	templatePath := s.templatePath()
+	template, err := loadRepoTemplate(templatePath, templatePath == defaultTemplatePath)
 	if err != nil {
 		return err
 	}
@@ -134,10 +139,19 @@ type repoService struct {
 	Depends       []string `yaml:"depends"`
 }
 
-func loadRepoTemplate(path string) (*repoTemplate, error) {
+func loadRepoTemplate(path string, allowEmbedded bool) (*repoTemplate, error) {
 	contents, err := os.ReadFile(path)
-	if err != nil {
-		return nil, fmt.Errorf("read template: %w", err)
+	switch {
+	case err == nil:
+		// use file contents
+	case allowEmbedded && errors.Is(err, os.ErrNotExist):
+		if len(embeddedTemplate) == 0 {
+			return nil, fmt.Errorf("template %q not found and no embedded default available", path)
+		}
+		fmt.Printf("template %q not found, using embedded default\n", path)
+		contents = embeddedTemplate
+	default:
+		return nil, fmt.Errorf("read template %q: %w", path, err)
 	}
 
 	var tpl repoTemplate

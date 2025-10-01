@@ -5,6 +5,8 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"os/exec"
+	"runtime"
 	"strconv"
 	"strings"
 )
@@ -26,6 +28,7 @@ func NewMenu(registry *TaskRegistry) *Menu {
 // Display shows the available options and handles user input
 func (m *Menu) Display(ctx context.Context) error {
 	for {
+		clearTerminal()
 		fmt.Println("\n=== DevTools Menu ===")
 		tasks := m.registry.GetTasks()
 
@@ -72,5 +75,17 @@ func (m *Menu) Display(ctx context.Context) error {
 
 		fmt.Println("\nPress Enter to continue...")
 		m.scanner.Scan()
+	}
+}
+
+func clearTerminal() {
+	switch runtime.GOOS {
+	case "windows":
+		cmd := exec.Command("cmd", "/c", "cls")
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		_ = cmd.Run()
+	default:
+		fmt.Print("\033[H\033[2J")
 	}
 }
