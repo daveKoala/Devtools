@@ -40,6 +40,7 @@ func (m *Menu) Display(ctx context.Context) error {
 		for i, task := range tasks {
 			fmt.Printf("%d. %s - %s\n", i+1, task.Name(), task.Description())
 		}
+		fmt.Printf("\n")
 		fmt.Printf("%d. Exit\n", len(tasks)+1)
 
 		fmt.Print("\nSelect option: ")
