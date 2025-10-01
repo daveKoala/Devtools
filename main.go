@@ -31,6 +31,7 @@ func main() {
 	registry.Register(&DependancyCheckTask{})
 	registry.Register(&ReposTask{})
 	registry.Register(&SSHKeyTask{})
+	registry.Register(&TemplateExportTask{})
 	registry.Register(&SystemInfoTask{})
 
 	// Create and display menu

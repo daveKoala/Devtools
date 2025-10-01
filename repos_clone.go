@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+	"time"
 )
 
 // ensureTargetDir creates the clone destination if it does not already exist.
@@ -38,6 +39,12 @@ func cloneServices(ctx context.Context, targetDir string, template *repoTemplate
 
 		if err := runPostCloneCommands(ctx, repoPath, name, svc.PostCloneCmds, svc.Environment); err != nil {
 			return err
+		}
+
+		if svc.HealthCheck != nil {
+			if err := runHealthCheck(ctx, repoPath, name, svc.HealthCheck, svc.Environment); err != nil {
+				return err
+			}
 		}
 	}
 	return nil
@@ -168,4 +175,62 @@ func mergedEnv(defaults map[string]string) []string {
 		result = append(result, fmt.Sprintf("%s=%s", k, values[k]))
 	}
 	return result
+}
+
+func runHealthCheck(ctx context.Context, repoPath, serviceName string, cfg *serviceHealth, envDefaults map[string]string) error {
+	command := strings.TrimSpace(cfg.Command)
+	if command == "" {
+		return nil
+	}
+
+	retries := cfg.Retries
+	if retries <= 0 {
+		retries = 5
+	}
+
+	interval := time.Second * 5
+	if cfg.Interval != "" {
+		if parsed, err := time.ParseDuration(cfg.Interval); err == nil {
+			interval = parsed
+		}
+	}
+
+	var timeout time.Duration
+	if cfg.Timeout != "" {
+		if parsed, err := time.ParseDuration(cfg.Timeout); err == nil {
+			timeout = parsed
+		}
+	}
+
+	env := mergedEnv(envDefaults)
+
+	for attempt := 1; attempt <= retries; attempt++ {
+		fmt.Printf("[%s] health check attempt %d/%d: %s\n", serviceName, attempt, retries, command)
+
+		runCtx := ctx
+		cancel := func() {}
+		if timeout > 0 {
+			runCtx, cancel = context.WithTimeout(ctx, timeout)
+		}
+
+		cmd := exec.CommandContext(runCtx, "bash", "-lc", command)
+		cmd.Dir = repoPath
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		cmd.Env = env
+
+		err := cmd.Run()
+		cancel()
+
+		if err == nil {
+			fmt.Printf("[%s] health check passed\n", serviceName)
+			return nil
+		}
+
+		if attempt < retries {
+			time.Sleep(interval)
+		}
+	}
+
+	return fmt.Errorf("service %q: health check failed after %d attempt(s)", serviceName, retries)
 }

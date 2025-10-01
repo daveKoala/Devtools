@@ -8,6 +8,10 @@ services:
       DB_DATABASE: core_api
       DB_USERNAME: core
       DB_PASSWORD: secret
+    healthCheck:
+      command: "curl -f http://localhost:8080/health"
+      interval: 5s
+      retries: 6
     postCloneCmds:
       - cp -n .env.example .env
       - docker compose up -d
@@ -20,6 +24,10 @@ services:
     environment:
       APP_ENV: local
       API_PORT: "8090"
+    healthCheck:
+      command: "curl -f http://localhost:8090/health"
+      interval: 5s
+      retries: 6
     postCloneCmds:
       - cp -n .env.example .env
       - docker compose up -d

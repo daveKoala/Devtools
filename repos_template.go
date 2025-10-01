@@ -21,10 +21,18 @@ type repoTemplate struct {
 
 // repoService captures the commands and relationships for a single service.
 type repoService struct {
-	Clone         string   `yaml:"clone"`
-	PostCloneCmds []string `yaml:"postCloneCmds"`
-	Depends       []string `yaml:"depends"`
+	Clone         string            `yaml:"clone"`
+	PostCloneCmds []string          `yaml:"postCloneCmds"`
+	Depends       []string          `yaml:"depends"`
 	Environment   map[string]string `yaml:"environment"`
+	HealthCheck   *serviceHealth    `yaml:"healthCheck"`
+}
+
+type serviceHealth struct {
+	Command  string `yaml:"command"`
+	Interval string `yaml:"interval"`
+	Retries  int    `yaml:"retries"`
+	Timeout  string `yaml:"timeout"`
 }
 
 // loadRepoTemplate fetches and parses template.yml, optionally falling back to the embedded copy.
