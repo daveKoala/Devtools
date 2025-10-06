@@ -7,6 +7,8 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+
+	"devtools/tasks/har"
 )
 
 func main() {
@@ -31,6 +33,7 @@ func main() {
 	registry.Register(&DependancyCheckTask{})
 	registry.Register(&ReposTask{})
 	registry.Register(&SSHKeyTask{})
+	registry.Register(har.New())
 	registry.Register(&TemplateExportTask{})
 	registry.Register(&SystemInfoTask{})
 

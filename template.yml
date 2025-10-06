@@ -1,6 +1,7 @@
 services:
   core-api:
-    clone: git clone git@bitbucket.org:deliveryappuk/core-api.git
+    clone: SHARED_NET=my-shared-net docker compose up -d --build
+    # clone: git clone git@bitbucket.org:deliveryappuk/core-api.git
     environment:
       APP_ENV: local
       API_PORT: "8080"
@@ -8,11 +9,13 @@ services:
       DB_DATABASE: core_api
       DB_USERNAME: core
       DB_PASSWORD: secret
+      SHARED_NET: my-shared-net
     healthCheck:
       command: "curl -f http://localhost:8080/health"
       interval: 5s
       retries: 6
     postCloneCmds:
+      - git checkout dave/monday-morning
       - cp -n .env.example .env
       - docker compose up -d
       - docker compose exec app php artisan migrate
