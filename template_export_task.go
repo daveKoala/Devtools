@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"time"
 )
 
 // TemplateExportTask writes the embedded template to disk for developers to customise.
@@ -49,5 +50,8 @@ func (t *TemplateExportTask) destinationPath() string {
 	if t.Destination != "" {
 		return t.Destination
 	}
-	return "exported_template.yml"
+
+	date := time.Now().UTC().Format("2006-01-02")
+
+	return "template_" + date + ".yml"
 }
