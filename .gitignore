@@ -2,4 +2,9 @@ devtools-macos.zip
 .DS_Store
 dev-app
 bin
-exported_template.yml
+
+# Block all files thta have _YYYY-MM-DD
+*_[0123][0-9]-[01][0-9]-[1-9][0-9][0-9][0-9][._]*.*
+
+# Or be specific to _YYYY-MM-DD.yml
+*_[0123][0-9]-[01][0-9]-[1-9][0-9][0-9][0-9][._]*.yml
