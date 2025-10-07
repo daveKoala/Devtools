@@ -1,10 +1,11 @@
 package main
 
 import (
-	"fmt"
+	"runtime/debug"
 	"strings"
 )
 
+// default values overridden by -ldflags during builds
 var (
 	version   = "dev"
 	commit    = ""
@@ -12,19 +13,29 @@ var (
 )
 
 func displayVersion() string {
-	base := version
-	if base == "" {
-		base = "dev"
+	ver := strings.TrimSpace(version)
+	sha := strings.TrimSpace(commit)
+	date := strings.TrimSpace(buildDate)
+
+	if ver == "" || ver == "(devel)" {
+		if info, ok := debug.ReadBuildInfo(); ok {
+			if info.Main.Version != "" && info.Main.Version != "(devel)" {
+				ver = info.Main.Version
+			}
+		}
 	}
-	details := make([]string, 0, 2)
-	if commit != "" {
-		details = append(details, fmt.Sprintf("commit %s", commit))
+
+	if ver == "" {
+		ver = "dev"
 	}
-	if buildDate != "" {
-		details = append(details, fmt.Sprintf("built %s", buildDate))
+
+	parts := []string{ver}
+	if sha != "" && sha != "unknown" {
+		parts = append(parts, sha)
 	}
-	if len(details) == 0 {
-		return base
+	if date != "" {
+		parts = append(parts, date)
 	}
-	return fmt.Sprintf("%s [%s]", base, strings.Join(details, ", "))
+
+	return strings.Join(parts, " | ")
 }

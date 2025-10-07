@@ -13,10 +13,12 @@ services:
       interval: 5s
       retries: 6
     postCloneCmds:
-      - cp -n .env.example .env
-      - docker compose up -d
-      - docker compose exec app php artisan migrate
-      - docker compose exec app php artisan db:seed
+      - git checkout dave/monday-morning
+      - ./local-dev.sh post-clone
+      # - cp -n .env.example .env
+      # - docker compose up -d
+      # - docker compose exec app php artisan migrate
+      # - docker compose exec app php artisan db:seed
     depends:
 
   dvla-service:
